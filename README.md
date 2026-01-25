@@ -18,6 +18,19 @@ Ce bot Telegram automatise la récupération d'informations depuis le site **Eas
 
 ---
 
+### 📸 Screenshots
+
+#### Notification de prochaine distribution
+<img alt="Panier" src="https://github.com/user-attachments/assets/b31ec975-9f49-4fe8-a3b8-2d4c12e14a2c" />
+
+#### Recherche de produits
+<img alt="Recherche" src="https://github.com/user-attachments/assets/08c593bf-bcf6-4961-980c-08bb258fc5e1" />
+
+#### Détection de nouveaux contrats
+<img alt="Contrats" src="https://github.com/user-attachments/assets/506cbcab-7a32-47c5-acd5-3ca0dc851324" />
+
+---
+
 ## 📂 Architecture du Projet
 
 Le code est structuré en quatre modules pour une maintenance facilitée :
