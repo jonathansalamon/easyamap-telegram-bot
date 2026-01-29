@@ -1,6 +1,9 @@
 import re
 from telegram import Update
 from telegram.ext import ContextTypes
+import logging
+from telegram.error import NetworkError, TimedOut
+from pathlib import Path
 import config
 import amap_api
 
@@ -10,14 +13,27 @@ def log_command(update: Update):
     msg = update.message.text if update.message else "System"
     print(f"📝 [LOG] Commande de {user.first_name} : {msg}")
 
+async def heartbeat_job(context: ContextTypes.DEFAULT_TYPE):
+    """Met à jour un fichier 'heartbeat.txt' pour prouver que le bot est actif."""
+    # Crée ou met à jour la date de modification du fichier
+    Path("heartbeat.txt").touch()
+
 async def send_formatted_basket(bot, target_chat_id, target_topic_id):
     """Fonction utilitaire pour envoyer le panier."""
     data = amap_api.get_amap_data()
-    if not data: return False
-    
+    print(f"🔍 [PANIER] Vérification demandée pour le chat {target_chat_id}...")
+    if not data: 
+        print("❌ [PANIER] Impossible de récupérer les données (Site AMAP injoignable ?)")
+        return False
     date_label, prods = amap_api.find_basket_for_friday(data)
-    if prods:
-        msg = f"Voici les produits à récupérer pour la distribution du *{date_label}* :\n\n" + "\n".join([f"• {p}" for p in prods])
+    if date_label is not None:
+        if prods: # Panier avec des produits
+            print(f"✅ [PANIER] {len(prods)} produits trouvés pour le {date_label}. Envoi du message...")
+            msg = f"Voici les produits à récupérer pour la distribution du *{date_label}* :\n\n" + "\n".join([f"• {p}" for p in prods])
+        else: # Panier trouvé mais vide []
+            print(f"ℹ️ [PANIER] Panier trouvé pour le {date_label} mais il est VIDE. Notification envoyée.")
+            msg = f"Aucun produit à récupérer le *{date_label}*."
+        
         await bot.send_message(
             chat_id=target_chat_id, 
             message_thread_id=int(target_topic_id) if target_topic_id else None, 
@@ -25,6 +41,7 @@ async def send_formatted_basket(bot, target_chat_id, target_topic_id):
             parse_mode='Markdown'
         )
         return True
+    print("⚠️ [PANIER] Aucune date de distribution trouvée correspondant à ce vendredi.")
     return False
 
 # --- COMMANDES ---
@@ -139,3 +156,19 @@ async def daily_contracts_check(context: ContextTypes.DEFAULT_TYPE):
             )
     else:
         print("✅ Aucune nouveauté dans les contrats.")
+
+# On configure un logger pour voir les erreurs proprement
+logger = logging.getLogger(__name__)
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Log l'erreur et évite au bot de planter sur une coupure réseau."""
+    # On récupère l'erreur
+    error = context.error
+
+    # Si c'est une erreur réseau (timeout ou coupure), on logue juste un avertissement
+    if isinstance(error, (NetworkError, TimedOut)):
+        print(f"⚠️ [AVERTISSEMENT] Problème réseau Telegram : {error}. Tentative de reconnexion automatique...")
+    else:
+        # Pour les autres erreurs, on logue le traceback complet pour débugger
+        print(f"❌ [ERREUR] Une erreur inattendue est survenue : {error}")
+        traceback.print_exc()
