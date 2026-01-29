@@ -17,6 +17,10 @@ if __name__ == '__main__':
         application.add_handler(CommandHandler("panier", bot_handlers.panier_command))
         application.add_handler(CommandHandler("contrats", bot_handlers.contrats_command))
         application.add_handler(CommandHandler("chercher", bot_handlers.chercher_command))
+        # Heartbeat toutes les 60 secondes
+        application.job_queue.run_repeating(bot_handlers.heartbeat_job, interval=60, first=10)
+        # Gestion d'erreurs
+        application.add_error_handler(bot_handlers.error_handler)
         
         # Configuration des Jobs
         if application.job_queue:
