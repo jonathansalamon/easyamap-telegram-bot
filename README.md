@@ -18,15 +18,15 @@ Ce bot Telegram automatise la récupération d'informations depuis le site **Eas
 
 ---
 
-### 📸 Screenshots
+## 📸 Screenshots
 
-#### Notification de prochaine distribution
+### Notification de prochaine distribution
 <img alt="Panier" src="https://github.com/user-attachments/assets/b31ec975-9f49-4fe8-a3b8-2d4c12e14a2c" />
 
-#### Recherche de produits
+### Recherche de produits
 <img alt="Recherche" src="https://github.com/user-attachments/assets/08c593bf-bcf6-4961-980c-08bb258fc5e1" />
 
-#### Détection de nouveaux contrats
+### Détection de nouveaux contrats
 <img alt="Contrats" src="https://github.com/user-attachments/assets/506cbcab-7a32-47c5-acd5-3ca0dc851324" />
 
 ---
@@ -89,10 +89,26 @@ Le bot utilise les variables d'environnement suivantes, à configurer sur votre 
 * **Session Persistante** : Le bot conserve ses cookies et ses jetons CSRF pour éviter de se reconnecter à chaque commande, ce qui accélère le temps de réponse.
 
 ---
+## 🛡️ Monitoring & Robustesse
 
+### Gestion des erreurs
+Le bot inclut un `error_handler` qui intercepte les micro-coupures réseau (ex: `httpx.ReadError`) sans faire planter le script. Cela permet de conserver le cache en mémoire et de ne pas perturber la file d'attente des tâches.
+
+### Système de "Heartbeat" (Battement de cœur)
+Pour détecter si le bot est figé (zombie) ou crashé, il met à jour un fichier témoin `heartbeat.txt` toutes les minutes.
+
+**Commande de monitoring :**
+```bash
+test -n "$(find /home/votre_utilisateur/bot-amap/heartbeat.txt -mmin -5 2>/dev/null)"
+```
+Si le fichier n'a pas été modifié depuis plus de 5 minutes, le service est automatiquement redémarré par l'hébergeur.
+
+---
 ## 📝 Logs
 
 Le bot journalise son activité dans la console :
 * **`📝 [LOG]`** : Détail des commandes reçues.
 * **`⏰ [JOB]`** : Suivi de l'exécution des tâches planifiées.
+* **`🔍 [PANIER] / 📂 [CONTRATS]`** : État du cache et du scraping.
+* **`⚠️ [AVERTISSEMENT]`** : Incidents réseau récupérés automatiquement.
 * **`🔄 / ✅ / ❌`** : État des tentatives de connexion et de récupération.
