@@ -28,7 +28,7 @@ if __name__ == '__main__':
             application.job_queue.run_daily(
                 bot_handlers.weekly_reminder, 
                 time=datetime.strptime("10:00", "%H:%M").time(), 
-                days=(3,)
+                days=(4,)
             )
             # 2. Vérif Contrats : Tous les jours à 14h00
             application.job_queue.run_daily(
